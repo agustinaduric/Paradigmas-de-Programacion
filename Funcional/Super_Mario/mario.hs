@@ -3,14 +3,12 @@ import Text.Show()
 import Data.Char(isUpper)
 
 -- PUNTO 1 --
-
 data Plomero = Plomero {
     nombre :: String,
     cajaHerramientas :: [Herramienta],
     historialReparaciones :: [Reparacion],
     dinero :: Float
 }
-
 data Herramienta = Herramienta {
     denominacion :: String,
     empuniadura :: Material,
@@ -46,34 +44,39 @@ esUnPlomeroMalvado :: Plomero -> Bool
 esUnPlomeroMalvado  = (== "wa") . take 2 . nombre
 
 puedeComprarHerramienta :: Herramienta -> Plomero -> Bool
-puedeComprarHerramienta unaHerramienta unPlomero = (<=) (precio unaHerramienta) (dinero unPlomero)
+puedeComprarHerramienta unaHerramienta unPlomero = 
+    (<=) (precio unaHerramienta) (dinero unPlomero)
 
 -- PUNTO 3 --
 
 esUnaHerramientaBuena :: Herramienta -> Bool
-esUnaHerramientaBuena unaHerramienta = tieneMangoDe Madera martillo || tieneMangoDe Goma martillo 
-esUnaHerramientaBuena unaHerramienta = tieneMangoDe Hierro unaHerramienta && ( (>1000) . precio) unaHerramienta
+esUnaHerramientaBuena unaHerramienta = 
+    tieneMangoDe Madera martillo || tieneMangoDe Goma martillo 
+esUnaHerramientaBuena unaHerramienta = 
+    tieneMangoDe Hierro unaHerramienta && ( (>1000) . precio) unaHerramienta
 
 tieneMangoDe :: Material -> Herramienta -> Bool
 tieneMangoDe unMaterial = (== unMaterial) . empuniadura   
 
 -- PUNTO 4 --
 
-modificarAlgo :: (b -> a) -> (a -> a) -> (a -> b -> b) -> b -> b --tranquilamente se puede componer 
-modificarAlgo unaCaracteristica unModificador aplicadorModificacion unAlgo = 
-  aplicadorModificacion (unModificador (unaCaracteristica unAlgo)) unAlgo
+modificarUnPlomero :: (Plomero -> a) -> (a -> a) -> (a -> Plomero -> Plomero) -> Plomero -> Plomero
+modificarUnPlomero unaCaracteristica unModificador aplicadorModificacion unPlomero = 
+  aplicadorModificacion (unModificador . unaCaracteristica $ unPlomero) unPlomero
 
 actualizarDinero :: Float -> Plomero -> Plomero
 actualizarDinero nuevoDinero unPlomero = unPlomero { dinero = nuevoDinero }
 
 pagarHerramienta :: Herramienta -> Plomero -> Plomero
-pagarHerramienta unaHerramienta = modificarAlgo dinero (subtract . precio $ unaHerramienta) actualizarDinero
+pagarHerramienta unaHerramienta =
+    modificarUnPlomero dinero (subtract . precio $ unaHerramienta) actualizarDinero
 
 actualizarHerramientas :: [Herramienta] -> Plomero -> Plomero
 actualizarHerramientas nuevasHerramientas unPlomero = unPlomero {cajaHerramientas = nuevasHerramientas}
 
 agregarHerramienta :: Herramienta -> Plomero -> Plomero
-agregarHerramienta unaHerramienta = modificarAlgo cajaHerramientas (unaHerramienta :) actualizarHerramientas
+agregarHerramienta unaHerramienta =
+    modificarUnPlomero cajaHerramientas (unaHerramienta :) actualizarHerramientas
 
 puedePagar :: Herramienta -> Plomero -> Bool
 puedePagar unaHerramienta unPlomero = precio unaHerramienta <= dinero unPlomero
@@ -116,35 +119,53 @@ esReparacionDificil  unaReparacion =
 presupuestoDeUnaReparacion :: Reparacion -> Int
 presupuestoDeUnaReparacion  = (*3) . length . descripcion
 
--- PUNTO 6
+-- PUNTO 6 --
 
 destornillador :: Herramienta
 destornillador = Herramienta "Destornillador" Plastico 0
 
 agregarReparacion :: Plomero -> Reparacion -> Plomero
 agregarReparacion unPlomero unaReparacion =
-    modificarAlgo historialReparaciones (unaReparacion :) actualizarReparaciones unPlomero
+    modificarUnPlomero historialReparaciones (unaReparacion :) actualizarReparaciones unPlomero
 
 actualizarReparaciones :: [Reparacion] -> Plomero -> Plomero
 actualizarReparaciones unasReparaciones unPlomero= unPlomero { historialReparaciones = unasReparaciones}
 
 plomeroConPlata :: Plomero -> Reparacion -> Plomero
-plomeroConPlata unPlomero unaReparacion = actualizarDinero (dinero unPlomero + fromIntegral (presupuestoDeUnaReparacion unaReparacion)) unPlomero
+plomeroConPlata unPlomero unaReparacion =
+    actualizarDinero (dinero unPlomero + fromIntegral (presupuestoDeUnaReparacion unaReparacion)) unPlomero
 
 herramientaSegun :: Plomero -> Reparacion -> Plomero
 herramientaSegun unPlomero unaReparacion 
-    | esUnPlomeroMalvado unPlomero = agregarHerramienta destornillador unPlomero
-    | esReparacionDificil unaReparacion = actualizarHerramientas (herramientasMalas . cajaHerramientas $ unPlomero) unPlomero
-    | not . esReparacionDificil $ unaReparacion = actualizarHerramientas (olvidarPrimerHerramienta unPlomero) unPlomero
+    | esUnPlomeroMalvado unPlomero =
+        agregarHerramienta destornillador unPlomero
+    | esReparacionDificil unaReparacion =
+        actualizarHerramientas (herramientasMalas . cajaHerramientas $ unPlomero) unPlomero
+    | not . esReparacionDificil $ unaReparacion =
+        actualizarHerramientas (olvidarPrimerHerramienta unPlomero) unPlomero
     | otherwise = unPlomero
+
+herramientasMalas :: [Herramienta] -> [Herramienta]
+herramientasMalas  = filter (not . esUnaHerramientaBuena )
 
 olvidarPrimerHerramienta :: Plomero -> [Herramienta]
 olvidarPrimerHerramienta unPlomero = drop 1 (cajaHerramientas unPlomero)
 
-hacerReparacion :: Plomero -> Reparacion -> Plomero --tranquilamente se puede componer 
+hacerReparacion :: Plomero -> Reparacion -> Plomero
 hacerReparacion unPlomero unaReparacion
-    | requerimiento unaReparacion unPlomero = herramientaSegun (plomeroConPlata (agregarReparacion unPlomero unaReparacion) unaReparacion) unaReparacion
-    | otherwise = herramientaSegun (actualizarDinero (dinero unPlomero + 100) unPlomero) unaReparacion
+    | requerimiento unaReparacion unPlomero =
+        herramientaSegun . plomeroConPlata . agregarReparacion unPlomero $ unaReparacion $ unaReparacion $ unaReparacion
+    | otherwise =
+        herramientaSegun . actualizarDinero . (+100) . dinero $ unPlomero $ unPlomero $ unaReparacion
 
-herramientasMalas :: [Herramienta] -> [Herramienta]
-herramientasMalas  = filter (not . esUnaHerramientaBuena )
+-- PUNTO 7 --
+
+jornadaDeTrabajo :: Plomero -> [Reparacion] -> Plomero
+jornadaDeTrabajo = foldr (flip hacerReparacion )  
+
+-- PUNTO 8 --
+
+--obtenerPlomeroMaxSegun :: (Plomero -> b) -> [Plomero] -> Plomero
+--obtenerPlomeroMaxSegun unCriterio unosPlomeros = 
+
+--- A)
