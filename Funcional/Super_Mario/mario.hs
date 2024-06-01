@@ -13,7 +13,7 @@ data Herramienta = Herramienta {
     denominacion :: String,
     empuniadura :: Material,
     precio :: Float
-} deriving (Show,Eq)
+} deriving (Eq)
 
 data Material = Hierro | Madera | Goma | Plastico deriving (Show,Eq)
 
@@ -154,9 +154,9 @@ olvidarPrimerHerramienta unPlomero = drop 1 (cajaHerramientas unPlomero)
 hacerReparacion :: Plomero -> Reparacion -> Plomero
 hacerReparacion unPlomero unaReparacion
     | requerimiento unaReparacion unPlomero =
-        herramientaSegun . plomeroConPlata . agregarReparacion unPlomero $ unaReparacion $ unaReparacion $ unaReparacion
+        herramientaSegun ( (plomeroConPlata . agregarReparacion unPlomero $ unaReparacion ) unaReparacion ) unaReparacion
     | otherwise =
-        herramientaSegun . actualizarDinero . (+100) . dinero $ unPlomero $ unPlomero $ unaReparacion
+        herramientaSegun ( (actualizarDinero . (+100) . dinero $ unPlomero ) unPlomero ) unaReparacion
 
 -- PUNTO 7 --
 
