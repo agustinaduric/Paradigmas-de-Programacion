@@ -46,8 +46,8 @@ type Productor = Serie -> Serie
 type ActoresFavoritos = [Actor]
 
 modificarUnaSerie :: (Serie -> a) -> (a -> a) -> (a -> Serie -> Serie) -> Serie -> Serie
-modificarUnaSerie unCriterio unModificador aplicarModificacion unaSerie =
-    aplicarModificacion (unModificador (unCriterio unaSerie)) unaSerie
+modificarUnaSerie unCriterio unModificador aplicarModificacion unaSerie = 
+    aplicarModificacion (unModificador . unCriterio $ unaSerie) unaSerie
 
 cambiarElenco :: [Actor] -> Serie -> Serie
 cambiarElenco nuevoElenco unaSerie = unaSerie{ elenco = nuevoElenco}
@@ -131,7 +131,30 @@ bienestarSegunReparto unaSerie
   | (<10) . length . elenco $ unaSerie = 3
   | otherwise = max 2 . subtract 10 . actoresConRestricciones $ unaSerie
 
-actoresConRestricciones :: Serie -> Int
-actoresConRestricciones unaSerie = length (filter (tieneMasDeNRestricciones 1) (elenco unaSerie))
+actoresConRestricciones :: Serie -> Int 
+actoresConRestricciones unaSerie = length . filter (tieneMasDeNRestricciones 1) $ elenco unaSerie
 
 -- PUNTO 4 --
+
+productorMasEfectivo :: [Serie] -> [Productor] -> [Serie]
+productorMasEfectivo unasSeries unosProductores = map (masEfectivo unosProductores) unasSeries
+
+masEfectivo :: [Productor] -> Serie -> Serie
+masEfectivo = foldl1 mejorProductor  
+
+mejorProductor :: Productor -> Productor -> Serie -> Serie
+mejorProductor prod1 prod2 serie
+    |bienestar (prod1 serie) > bienestar (prod2 serie) = prod1 serie
+    |otherwise = prod2 serie
+
+-- PUNTO 6 --
+
+type Sueldo = Int
+
+esSerieControvertida :: Serie -> Bool
+esSerieControvertida unaSerie = ordenDecreciente $ map sueldo (elenco unaSerie)
+
+ordenDecreciente :: [Sueldo] -> Bool
+ordenDecreciente [] = True
+ordenDecreciente [x] = True
+ordenDecreciente (x:y:xs) = x > y && ordenDecreciente (y:xs)
