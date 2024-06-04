@@ -165,7 +165,35 @@ jornadaDeTrabajo = foldr (flip hacerReparacion )
 
 -- PUNTO 8 --
 
---obtenerPlomeroMaxSegun :: (Plomero -> b) -> [Plomero] -> Plomero
---obtenerPlomeroMaxSegun unCriterio unosPlomeros = 
+obtenerPlomeroMaxSegun :: (Ord b) => (Plomero -> b) -> [ Plomero ]-> Plomero
+obtenerPlomeroMaxSegun unCriterio = foldl1 (mayorSegun unCriterio) 
+
+mayorSegun :: Ord b => (Plomero -> b) -> Plomero -> Plomero -> Plomero
+mayorSegun unCriterio plomero1 plomero2
+  | unCriterio plomero1 > unCriterio plomero2 = plomero1
+  | otherwise = plomero2
 
 --- A)
+
+empleadoMasReparador :: [Plomero] -> [Reparacion] -> Plomero
+empleadoMasReparador unosPlomeros unasReparaciones = 
+    obtenerPlomeroMaxSegun (length . historialReparaciones) 
+    (plomerosTrasJornadaLaboral unasReparaciones unosPlomeros)
+
+--- B) 
+
+empleadoMasAdinerado :: [Plomero] -> [Reparacion] -> Plomero
+empleadoMasAdinerado unosPlomeros unasReparaciones =
+    obtenerPlomeroMaxSegun dinero (plomerosTrasJornadaLaboral unasReparaciones unosPlomeros)
+
+--- C) 
+
+empleadoQueMasInvirtio :: [Plomero] -> [Reparacion] -> Plomero
+empleadoQueMasInvirtio unosPlomeros unasReparaciones =
+    obtenerPlomeroMaxSegun plataInvertida (plomerosTrasJornadaLaboral unasReparaciones unosPlomeros)
+    where
+        plataInvertida = sum . map precio . cajaHerramientas
+
+plomerosTrasJornadaLaboral :: [Reparacion] -> [Plomero] -> [Plomero]
+plomerosTrasJornadaLaboral unasReparaciones =
+    map (flip jornadaDeTrabajo unasReparaciones) 
