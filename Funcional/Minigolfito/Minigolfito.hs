@@ -129,9 +129,9 @@ efectoHoyo unTiro = tiroDetenido
 palosUtiles :: Jugador -> Obstaculo -> [Palo]
 palosUtiles unJugador unObstaculo = filter (sonPalosUtiles unObstaculo unJugador) palos
 
-sonPalosUtiles ::  Obstaculo -> Jugador -> Palo -> Bool -- Componer
-sonPalosUtiles unObstaculo unJugador unPalo=
-   unObstaculo (golpeDeUnJugador unJugador unPalo) /= tiroDetenido
+sonPalosUtiles ::  Obstaculo -> Jugador -> Palo -> Bool
+sonPalosUtiles unObstaculo unJugador =
+   (/= tiroDetenido) . unObstaculo . golpeDeUnJugador unJugador
 
 --- B) 
 
@@ -142,7 +142,25 @@ obstaculosSuperados (unObstaculo : unosObstaculos) unTiro
   | otherwise = 0
   
 -- C)
+
 maximoSegun f = foldl1 (mayorSegun f)
+
 mayorSegun f a b
   | f a > f b = a
   | otherwise = b
+
+paloMasUtil :: Jugador -> [UnObstaculo] -> Palo
+paloMasUtil unJugador unosObstaculos =
+  maximoSegun (obstaculosSuperados unosObstaculos . golpeDeUnJugador unJugador) palos
+
+-- PUNTO 5 --
+
+type PuntosTotales = (Jugador , Puntos)
+
+padreDelNinioQueNoGano :: [PuntosTotales] -> [String]
+padreDelNinioQueNoGano listaFinalTorneo =
+  map ( padre . fst) (filter ( not . esJugadorGanador listaFinalTorneo) listaFinalTorneo)
+
+esJugadorGanador :: [PuntosTotales] -> PuntosTotales -> Bool
+esJugadorGanador listaJugadores unJugador =
+  (all ((<snd unJugador) . snd ). filter (/=unJugador)) listaJugadores
