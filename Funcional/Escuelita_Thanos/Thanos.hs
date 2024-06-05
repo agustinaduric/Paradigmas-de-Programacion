@@ -1,5 +1,6 @@
 import Data.List()
 import Text.Show.Functions()
+import Distribution.Compat.CharParsing (CharParsing(string))
 
 -- PUNTO 1 --
 
@@ -17,19 +18,19 @@ data Guantelete = Guantelete {
 }
 
 iroMan :: Personaje
-iroMan = Personaje "Iron Man" 35 95 "s" ["s"]
+iroMan = Personaje "Iron Man" 35 100 "" []
 
 drStrange :: Personaje
 drStrange = Personaje "drStrange" 45 100 "" []
 
 groot :: Personaje
-groot = Personaje "Groot" 22 61 "" []
+groot = Personaje "Groot" 25 60 "" []
 
 wolverine :: Personaje 
-wolverine = Personaje "wolverine" 29 55 "" []
+wolverine = Personaje "wolverine" 30 80 "" []
 
 viudaNegra :: Personaje
-viudaNegra = Personaje "Viuda Negra" 40 68 "" []
+viudaNegra = Personaje "Viuda Negra" 40 70 "" []
 
 type Universo = [Personaje]
 universo :: Universo
@@ -54,66 +55,74 @@ chasquearUniverso unGuantelete
 
 efectoChasquido :: Universo -> Universo
 efectoChasquido unUniverso = 
-     drop (flip div 2 $ length unUniverso) unUniverso
+     take (flip div 2 $ length unUniverso) unUniverso
 
 -- PUNTO 2 --
 
 -- A) 
+
 esUniversoAptoPendex :: Universo -> Bool
 esUniversoAptoPendex = esUniversoApto 45 
 
-esUniversoApto :: Int -> Universo -> Bool
-esUniversoApto unaEdad = any ((<45).edad) 
+esUniversoApto :: Edad -> Universo -> Bool
+esUniversoApto unaEdad = any ((<unaEdad).edad) 
 
 -- B) 
 
-energiaTotalDelUniverso :: Universo -> Int
+type Energia = Int
+
+energiaTotalDelUniverso :: Universo -> Energia
 energiaTotalDelUniverso  = sum . map energia 
 
 -- PUNTO 3 --
 
 type Gema = Personaje -> Personaje
 
-modificarCaracteristicaPersonaje :: Personaje-> (b -> b) -> (Personaje -> b) -> b
-modificarCaracteristicaPersonaje unPersonaje unModificador unAaspecto =
-    unModificador . unAaspecto $ unPersonaje
+type Habilidad = String
 
-modificarunPersonaje :: (Personaje -> a) -> (a -> a) -> (a -> Personaje -> Personaje) -> Personaje -> Personaje
-modificarunPersonaje unaCaracteristica unModificador aplicadorModificacion unPersonaje = 
+type Planeta = String
+
+type Edad = Int
+
+modificarUnPersonaje :: (Personaje -> a) -> (a -> a) -> (a -> Personaje -> Personaje) -> Personaje -> Personaje
+modificarUnPersonaje unaCaracteristica unModificador aplicadorModificacion unPersonaje = 
   aplicadorModificacion (unModificador . unaCaracteristica $ unPersonaje) unPersonaje
 
 mente :: Int -> Gema 
-mente valor  = modificarunPersonaje energia (subtract valor) modificadorEnergia 
+mente valor  = modificarUnPersonaje energia (subtract valor) modificadorEnergia 
 
-modificadorEnergia :: Int -> Personaje -> Personaje
+modificadorEnergia :: Energia -> Personaje -> Personaje
 modificadorEnergia nuevaEnergia unPersonaje = unPersonaje {energia = nuevaEnergia}
 
-alma :: String -> Gema
+alma :: Habilidad -> Gema
 alma unaHabilidad unPersonaje = 
-    (mente 10 unPersonaje){habilidades = eliminarHabilidad unaHabilidad unPersonaje}
+   modificadorHabilidad (eliminarHabilidad unaHabilidad unPersonaje) (mente 10 unPersonaje)
 
-eliminarHabilidad :: String -> Personaje -> [String]
+eliminarHabilidad :: Habilidad -> Personaje -> [Habilidad]
 eliminarHabilidad unaHabilidad  unPersonaje= 
     filter (/=unaHabilidad ) ( habilidades unPersonaje)
 
-espacio :: String -> Gema
+modificadorHabilidad :: [Habilidad] -> Personaje -> Personaje
+modificadorHabilidad nuevaHabilidad unPersonaje = unPersonaje { habilidades = nuevaHabilidad}
+
+espacio :: Planeta -> Gema
 espacio unPlaneta unPersonaje =  nuevoPlaneta (mente 20 unPersonaje) unPlaneta
 
-nuevoPlaneta :: Personaje -> String -> Personaje
-nuevoPlaneta unPersonaje unPlaneta = unPersonaje {planeta = unPlaneta}
+nuevoPlaneta :: Personaje -> Planeta -> Personaje
+nuevoPlaneta unPersonaje unPlaneta = unPersonaje { planeta = unPlaneta}
 
 poder :: Gema
 poder unPersonaje = eliminarNhabilidades 2 (modificadorEnergia 0 unPersonaje )
 
 eliminarNhabilidades :: Int -> Personaje -> Personaje
 eliminarNhabilidades unNumero unPersonaje 
-    | unNumero <= (length . habilidades $ unPersonaje ) = unPersonaje{habilidades = []}
+    | unNumero <= (length . habilidades $ unPersonaje ) = modificadorHabilidad [] unPersonaje
     | otherwise = unPersonaje
 
 tiempo :: Gema 
-tiempo unPersonaje = (mente 50 unPersonaje){edad = reductorEdad . edad $ unPersonaje}
+tiempo unPersonaje = (mente 50 unPersonaje) { edad = reductorEdad . edad $ unPersonaje}
 
-reductorEdad :: (Integral a, Ord a ) => a -> a
+reductorEdad :: Edad -> Edad
 reductorEdad unaEdad
     | ((>= 18) . div unaEdad ) 2 = div unaEdad 2
     | otherwise = 18
@@ -125,7 +134,7 @@ loca unaGema = unaGema . unaGema
 
 guanteleteEjemplo :: String -> Guantelete
 guanteleteEjemplo "usar Mjolnir" = 
-    Guantelete  "" [tiempo, alma "usar Mjolnir" , loca . alma $ "Programacion en Haskell"] 
+    Guantelete  "uru" [tiempo, alma "usar Mjolnir" , loca . alma $ "Programacion en Haskell"] 
 
 -- PUNTO 5 --
 
@@ -134,9 +143,12 @@ ejecutarPoder unasGemas unPersonaje = foldl (flip ($)) unPersonaje unasGemas
 
 -- PUNTO 6 --
 
-{-
-Resolver utilizando recursividad. Definir la función gemaMasPoderosa que dado un guantelete
- y una persona obtiene la gema del infinito que produce la pérdida más grande de energía 
- sobre la víctima. 
--}
--- gemaMasPoderosa :: Guantelete -> Personaje -> Gema
+gemaMasPoderosa :: Guantelete -> Personaje -> Gema
+gemaMasPoderosa unGuantelete  =
+    sacaMasEnergia (gemas unGuantelete) 
+
+sacaMasEnergia :: [Gema] -> Personaje -> Gema
+sacaMasEnergia [gema1] _ = gema1
+sacaMasEnergia (gema1:gema2:otrasGemas) unPersonaje
+    | (energia . gema1 $ unPersonaje) < (energia . gema2 $ unPersonaje) = sacaMasEnergia (gema1:otrasGemas) unPersonaje
+    | otherwise = sacaMasEnergia (gema2 : otrasGemas) unPersonaje
