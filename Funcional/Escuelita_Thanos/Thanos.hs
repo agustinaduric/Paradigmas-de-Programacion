@@ -1,6 +1,5 @@
 import Data.List()
 import Text.Show.Functions()
-import Distribution.Compat.CharParsing (CharParsing(string))
 
 -- PUNTO 1 --
 
