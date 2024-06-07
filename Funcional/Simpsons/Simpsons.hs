@@ -55,7 +55,7 @@ lisaConActividades = mirarTV . irALaEscuela $ lisa
 srBurns :: Simpson
 srBurns = Simpson "Sr Burns" 1000 20
 
--- PUNTO 2 --
+-- PARTE 2 --
 
 type Logro = Simpson -> Bool
 
