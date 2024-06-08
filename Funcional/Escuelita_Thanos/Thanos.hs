@@ -71,7 +71,10 @@ esUniversoApto unaEdad = any ((<unaEdad).edad)
 type Energia = Int
 
 energiaTotalDelUniverso :: Universo -> Energia
-energiaTotalDelUniverso  = sum . map energia 
+energiaTotalDelUniverso  = sum . map energia . filter ((1>=) . habilidadUnPersonaje) 
+
+habilidadUnPersonaje :: Personaje -> Int
+habilidadUnPersonaje = length . habilidades
 
 -- PUNTO 3 --
 
@@ -115,7 +118,7 @@ poder unPersonaje = eliminarNhabilidades 2 (modificadorEnergia 0 unPersonaje )
 
 eliminarNhabilidades :: Int -> Personaje -> Personaje
 eliminarNhabilidades unNumero unPersonaje 
-    | unNumero <= (length . habilidades $ unPersonaje ) = modificadorHabilidad [] unPersonaje
+    | unNumero <= habilidadUnPersonaje unPersonaje = modificadorHabilidad [] unPersonaje
     | otherwise = unPersonaje
 
 tiempo :: Gema 
