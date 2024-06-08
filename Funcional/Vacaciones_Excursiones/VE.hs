@@ -24,9 +24,9 @@ sumarIdioma :: Idioma -> Turista -> Turista
 sumarIdioma unIdioma unTurista = 
     unTurista { idiomas = unIdioma : idiomas unTurista }
 
-cambiarCompania :: Turista -> Turista
-cambiarCompania unTurista = 
-    unTurista { acompaniado = not . acompaniado $ unTurista}
+turistaAcompaniado :: Turista -> Turista
+turistaAcompaniado unTurista = 
+    unTurista { acompaniado = True}
 
 type Excursion = Turista -> Turista
 
@@ -35,14 +35,17 @@ irALaPlaya unTurista
     | acompaniado unTurista = modificarEstres (-1) unTurista
     | otherwise = modificarCansacio (-10) unTurista
 
-type Paisaje = String
+type Elemento = String
 
-apreciarUn :: Paisaje -> Turista -> Turista
-apreciarUn paisaje = modificarEstres (- (length paisaje))
+apreciarUn :: Elemento -> Excursion
+apreciarUn unElemento = modificarEstres (- (length unElemento))
+
+salirAHablar :: Idioma -> Turista -> Turista
+salirAHablar unIdioma = turistaAcompaniado . sumarIdioma unIdioma
 
 type Minutos = Int
 
-caminar :: Minutos -> Turista -> Turista
+caminar :: Minutos -> Excursion
 caminar unosMinutos =
     modificarEstres (- nivelIntesidad unosMinutos) . modificarCansacio (nivelIntesidad unosMinutos )
 
@@ -53,10 +56,10 @@ nivelIntesidad minutos = div minutos 4
 
 data Marea = Fuerte | Moderada | Tranquila deriving Eq
 
-paseoEnBarco :: Marea -> Turista -> Turista
+paseoEnBarco :: Marea -> Excursion
 paseoEnBarco unaMarea unTurista 
     | unaMarea == Fuerte = modificarEstres 6 . modificarCansacio 10 $ unTurista
-    | unaMarea == Tranquila = sumarIdioma "Alemán" . apreciarUn "Mar" . caminar 10 $ unTurista
+    | unaMarea == Tranquila = salirAHablar "Alemán" . apreciarUn "Mar" . caminar 10 $ unTurista
     | otherwise = unTurista
 
 ana :: Turista
@@ -110,7 +113,7 @@ type Tour = [Excursion]
 
 tourCompleto :: Tour
 tourCompleto =
-    [apreciarUn "Cascada" . caminar 20 , caminar 20, sumarIdioma "Melmacquiano"]
+    [apreciarUn "Cascada" . caminar 20 , caminar 20, salirAHablar "Melmacquiano"]
 
 ladoB :: Excursion -> Tour
 ladoB unaExcursion = [unaExcursion . paseoEnBarco Tranquila, caminar 120]
