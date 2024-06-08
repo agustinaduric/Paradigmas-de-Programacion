@@ -10,39 +10,44 @@ data Alfajor = Alfajor {
     dulzor :: Float
 }
 
-data Relleno = DulceDeLeche | Mousse | Fruta deriving Eq
+data Relleno = Relleno {
+    sabor :: Sabor,
+    precio :: Float
+} deriving Eq
+
+data Sabor = DulceDeLeche | Mousse | Fruta deriving Eq
 
 --- A)
 
 jorgito :: Alfajor
-jorgito = Alfajor "Jorgito" [DulceDeLeche]  80 8
+jorgito = Alfajor "Jorgito" [Relleno DulceDeLeche  12]  80 8
 
 havanna :: Alfajor
-havanna = Alfajor "Havanna" [Mousse, Mousse] 60 12
+havanna = Alfajor "Havanna" [Relleno Mousse 15, Relleno Mousse 15] 60 12
 
 capitanDelEspacio :: Alfajor
-capitanDelEspacio = Alfajor "Capitán del espacio" [DulceDeLeche] 40 12
+capitanDelEspacio = Alfajor "Capitán del espacio" [Relleno DulceDeLeche  12] 40 12
 
 --- B) 
 
 coeficienteDeDulzor :: Alfajor -> Float
 coeficienteDeDulzor unAlfajor = (/ dulzor unAlfajor) . peso $ unAlfajor 
 
-precioDeAlfajor :: Float -> Alfajor -> Float
-precioDeAlfajor precioRelleno unAlfajor  = 
-     ((* precioRelleno). cantidadDeCapas $ unAlfajor) + ((* 2) . peso $ unAlfajor)
+precioDeAlfajor :: Alfajor -> Float
+precioDeAlfajor unAlfajor  = 
+     (2 * peso unAlfajor) + (sum . map precio . relleno $ unAlfajor)
 
 cantidadDeCapas :: Alfajor -> Float
 cantidadDeCapas = genericLength . relleno
 
 precioDulceDeLEche :: Alfajor -> Float
-precioDulceDeLEche = precioDeAlfajor 12
+precioDulceDeLEche = precioDeAlfajor 
 
 precioMousse :: Alfajor -> Float
-precioMousse = precioDeAlfajor 15
+precioMousse = precioDeAlfajor 
 
 precioFruta :: Alfajor -> Float
-precioFruta = precioDeAlfajor 10
+precioFruta = precioDeAlfajor 
 
 esPotable :: Alfajor -> Bool
 esPotable unAlfajor = 
@@ -55,12 +60,12 @@ capasMismoSabor unAlfajor = all (== primeraCapa unAlfajor) (relleno unAlfajor)
 
 bajarPeso :: Float -> Alfajor -> Alfajor
 bajarPeso unPeso unAlfajor = 
-    unAlfajor{peso = subtract unPeso (peso unAlfajor )}
+    unAlfajor{ peso = subtract unPeso (peso unAlfajor )}
 
 
 sacarDulzor :: Float -> Alfajor -> Alfajor
 sacarDulzor unDulzor unAlfajor = 
-    unAlfajor{dulzor = dulzor unAlfajor - unDulzor}
+    unAlfajor{ dulzor = subtract unDulzor (dulzor unAlfajor)}
 
 --- A) 
 
@@ -71,16 +76,16 @@ abaratarAlfajor  = bajarPeso 10 . sacarDulzor 7
 
 renombrarAlfajor :: String -> Alfajor -> Alfajor
 renombrarAlfajor nuevoNombre unAalfajor=
-    unAalfajor{nombre = nuevoNombre}
+    unAalfajor{ nombre = nuevoNombre}
 
 --- C) 
 
-agregarRelleno :: a -> [a] -> [a]
+agregarRelleno :: Relleno -> [Relleno] -> [Relleno]
 agregarRelleno nuevoRelleno = (nuevoRelleno :)
 
 agregarCapa :: Alfajor -> Relleno -> Alfajor
 agregarCapa unAlfajor unaCapa =
-     unAlfajor{relleno = agregarRelleno unaCapa (relleno unAlfajor) }
+     unAlfajor{ relleno = agregarRelleno unaCapa (relleno unAlfajor) }
 
 --- D)
 
@@ -103,7 +108,7 @@ primeraCapa = head . relleno
 
 premiumGradoN :: Int -> Alfajor -> Alfajor
 premiumGradoN unGrado unAlfajor 
-    | unGrado /= 0= premiumGradoN (unGrado - 1) (efectoPremium unAlfajor)
+    | unGrado /= 0 = premiumGradoN (unGrado - 1) (efectoPremium unAlfajor)
     | otherwise = unAlfajor
 
 --- F)
@@ -112,7 +117,7 @@ jorgitito :: Alfajor
 jorgitito = renombrarAlfajor "Jorgitito" . abaratarAlfajor $ jorgito
 
 jorgelin :: Alfajor
-jorgelin = renombrarAlfajor "Jorgelín" . flip agregarCapa DulceDeLeche $ jorgito
+jorgelin = renombrarAlfajor "Jorgelín" . flip agregarCapa (Relleno DulceDeLeche 12)  $ jorgito
 
 capitanDelEspacioCostaACosta :: Alfajor
 capitanDelEspacioCostaACosta = 
@@ -132,52 +137,65 @@ alfajorTieneNombreCon unasLetras = isInfixOf unasLetras. nombre
 coeficienteDulzorMayorA :: Float -> Alfajor -> Bool
 coeficienteDulzorMayorA unaCifra = (>unaCifra) . dulzor  
 
+
 tieneCapaDe :: Relleno -> Alfajor -> Bool
-tieneCapaDe unSabor unAlfajor = 
-    elem unSabor (relleno unAlfajor)
+tieneCapaDe unRelleno unAlfajor = all (unRelleno ==) (relleno unAlfajor)
 
 --- A)
 
 emi ::  Cliente
-emi  = Cliente 120 [] [alfajorTieneNombreCon "CapitanDelEspacio"]
+emi  = 
+    Cliente 120 [] [alfajorTieneNombreCon "CapitanDelEspacio"]
 
 tomi :: Cliente
-tomi = Cliente 100 [] [alfajorTieneNombreCon "Premium", coeficienteDulzorMayorA 0.15]
+tomi = 
+    Cliente 100 [] [alfajorTieneNombreCon "Premium", coeficienteDulzorMayorA 0.15]
 
 dante :: Cliente
-dante = Cliente 200 [] [not . tieneCapaDe DulceDeLeche, not . esPotable]
+dante = 
+    Cliente 200 [] [not . tieneCapaDe (Relleno DulceDeLeche 12), not . esPotable]
 
 juan :: Cliente
-juan = Cliente 500 [] [alfajorTieneNombreCon "jorgito", not . tieneCapaDe Mousse]
+juan = 
+    Cliente 500 [] [alfajorTieneNombreCon "jorgito", not . tieneCapaDe (Relleno Mousse 15)]
 
 --- B) 
 
---alfajoresRicosSegun :: Cliente -> [Alfajor]-> [Alfajor]
+alfajoresRicosSegun :: Cliente -> [Alfajor] -> [Alfajor]
+alfajoresRicosSegun unCliente =
+    filter (cumpleCriterio . criterios $ unCliente)
+
+cumpleCriterio :: [Alfajor -> Bool] -> Alfajor -> Bool
+cumpleCriterio unosCriterios unAlfajor = all ($ unAlfajor) unosCriterios 
 
 --- C)
 
-agregarAlfajor :: a -> [a] -> [a]
-agregarAlfajor = agregarRelleno
 
-puedeComprar :: Cliente -> Float -> Alfajor -> Bool
-puedeComprar unCliente precioRelleno unAlfajor= 
-    precioDeAlfajor precioRelleno unAlfajor < dinero unCliente
-
-comprarUnAlfajor :: Alfajor -> Float -> Cliente -> Cliente
-comprarUnAlfajor unAlfajor precioRelleno unCliente
-    | puedeComprar unCliente precioRelleno unAlfajor = 
-       clienteTrasPagar (gastarDinero (precioDeAlfajor precioRelleno unAlfajor) unCliente) unAlfajor
+comprarAlfajor :: Cliente -> Alfajor -> Cliente
+comprarAlfajor unCliente unAlfajor
+    | puedeComprar unAlfajor unCliente = efectoCompra unAlfajor unCliente
     | otherwise = unCliente
 
-setAlfajores :: Cliente -> [Alfajor] -> Cliente
-setAlfajores unCliente unosAlfajores =
-    unCliente{alfajoresComprados = unosAlfajores}
+puedeComprar :: Alfajor -> Cliente -> Bool
+puedeComprar unAlfajor unCliente = 
+    precioDeAlfajor unAlfajor <= dinero unCliente
 
-gastarDinero :: Float -> Cliente -> Cliente
-gastarDinero unDinero unCliente = unCliente{dinero = subtract unDinero (dinero unCliente) }
+efectoCompra :: Alfajor -> Cliente -> Cliente
+efectoCompra unAlfajor unCliente =
+     flip setAlfajores unCliente. agregarAlfajor unAlfajor . pagarAlfajor unAlfajor $ unCliente
 
-clienteTrasPagar :: Cliente -> Alfajor -> Cliente
-clienteTrasPagar unCliente unAlfajor =
-     setAlfajores unCliente (agregarAlfajor unAlfajor (alfajoresComprados unCliente))
+agregarAlfajor :: Alfajor -> Cliente -> [Alfajor]
+agregarAlfajor unAlfajor = (unAlfajor :) . alfajoresComprados 
+
+setAlfajores :: [Alfajor] -> Cliente -> Cliente
+setAlfajores unosAlfajores unCliente = unCliente{ alfajoresComprados = unosAlfajores}
+
+pagarAlfajor :: Alfajor -> Cliente -> Cliente
+pagarAlfajor unAlfajor unCliente =
+    unCliente{ dinero = dinero unCliente - precioDeAlfajor unAlfajor}
 
 --- D) 
+
+comprarAlfajoresRicos :: Cliente -> [Alfajor] -> Cliente
+comprarAlfajoresRicos unCliente unosAlfajores = 
+    foldl comprarAlfajor unCliente (alfajoresRicosSegun unCliente unosAlfajores)
