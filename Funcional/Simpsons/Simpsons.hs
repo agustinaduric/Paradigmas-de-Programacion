@@ -9,30 +9,31 @@ data Simpson = Simpson {
     felicidad :: Float
 }
 
-cambiarFelicidad :: Float -> Simpson -> Simpson
-cambiarFelicidad nuevaFelicidad unPersonaje =
-    unPersonaje{ felicidad = max 0 (felicidad unPersonaje + nuevaFelicidad)}
 
-cambiarDinero :: Float -> Simpson -> Simpson
-cambiarDinero nuevoMonto unPersonaje =
-    unPersonaje{ dinero = dinero unPersonaje + nuevoMonto}
+modificarFelicidad :: (Float -> Float) -> Simpson -> Simpson
+modificarFelicidad unModificador unPersonaje =
+    unPersonaje{ felicidad = max 0 . unModificador . felicidad $ unPersonaje}
+
+modificarDinero :: (Float -> Float) -> Simpson -> Simpson
+modificarDinero unModificador unPersonaje =
+    unPersonaje{ dinero = (unModificador . dinero )unPersonaje }
 
 irALaEscuela :: Actividad
 irALaEscuela unPersonaje
-    | nombre unPersonaje == "Lisa" = cambiarFelicidad 20 unPersonaje
-    | otherwise = cambiarFelicidad (-20) unPersonaje
+    | nombre unPersonaje == "Lisa" = modificarFelicidad (+ 20) unPersonaje
+    | otherwise = modificarFelicidad (subtract 20) unPersonaje
 
 comerNDonnas :: Float -> Actividad
 comerNDonnas cantidad  = 
-   cambiarDinero (10*cantidad) . cambiarFelicidad (10* cantidad) 
+   modificarDinero (subtract (10*cantidad)) . modificarFelicidad (+10 * cantidad) 
 
 irATrabajar :: String -> Actividad
 irATrabajar unLugar unPersonaje
-    | unLugar == "Planta de Energía Nuclear" = cambiarDinero 14 unPersonaje
+    | unLugar == "Planta de Energía Nuclear" = modificarDinero (+14) unPersonaje
     | unLugar == "Escuela" = irALaEscuela unPersonaje
 
 mirarTV :: Simpson -> Simpson
-mirarTV = cambiarFelicidad 50
+mirarTV = modificarFelicidad (+50)
 
 homero :: Simpson 
 homero = Simpson "Homero" 200 90
@@ -63,14 +64,14 @@ serMillonario :: Logro
 serMillonario = (>= dinero srBurns). dinero 
 
 alegrarse :: Float -> Logro
-alegrarse felicidadDeseada = (felicidadDeseada >=) . felicidad
+alegrarse felicidadDeseada = (felicidadDeseada <=) . felicidad
 
 verAKrosti :: Logro
 verAKrosti = (10<=) . dinero
 
 comprarMansion :: Logro
 comprarMansion unPersonaje = 
-    serMillonario unPersonaje && ((70>=) . felicidad $ unPersonaje)
+    serMillonario unPersonaje && ((70<=) . felicidad $ unPersonaje)
 
 --- A)
 
