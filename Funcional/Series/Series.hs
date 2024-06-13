@@ -156,5 +156,5 @@ esSerieControvertida unaSerie = ordenDecreciente $ map sueldo (elenco unaSerie)
 
 ordenDecreciente :: [Sueldo] -> Bool
 ordenDecreciente [] = True
-ordenDecreciente [x] = True
-ordenDecreciente (x:y:xs) = x > y && ordenDecreciente (y:xs)
+ordenDecreciente [sueldo1] = True
+ordenDecreciente (sueldo1:sueldo2:otrosSueldos) = sueldo1 > sueldo2 && ordenDecreciente (sueldo2:otrosSueldos)
