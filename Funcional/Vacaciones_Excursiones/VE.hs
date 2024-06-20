@@ -1,6 +1,3 @@
-import Data.List()
-import Text.Show.Functions()
-
 -- PUNTO 1 --
 
 data Turista = Turista {
@@ -10,13 +7,13 @@ data Turista = Turista {
     idiomas :: [String]
 }
 
-modificarEstres :: Int -> Turista -> Turista
-modificarEstres unaCifra unTurista =
-    unTurista { nivelEstres = nivelEstres unTurista + unaCifra }
+modificarEstres :: (Int -> Int) -> Turista -> Turista
+modificarEstres unModificador unTurista =
+    unTurista{ nivelEstres = unModificador . nivelEstres $ unTurista}
 
-modificarCansacio :: Int -> Turista -> Turista
-modificarCansacio unaCifra unTurista =
-    unTurista { nivelCansacio = nivelCansacio unTurista + unaCifra }
+modificarCansacio :: (Int -> Int) -> Turista -> Turista
+modificarCansacio unModificador unTurista =
+    unTurista{ nivelCansacio = (unModificador . nivelCansacio) unTurista}
 
 type Idioma = String
 
@@ -32,13 +29,13 @@ type Excursion = Turista -> Turista
 
 irALaPlaya :: Excursion
 irALaPlaya unTurista
-    | acompaniado unTurista = modificarEstres (-1) unTurista
-    | otherwise = modificarCansacio (-10) unTurista
+    | acompaniado unTurista = modificarEstres (subtract 1) unTurista
+    | otherwise = modificarCansacio (subtract 5) unTurista
 
 type Elemento = String
 
 apreciarUn :: Elemento -> Excursion
-apreciarUn unElemento = modificarEstres (- (length unElemento))
+apreciarUn unElemento = modificarEstres ((subtract . length) unElemento)
 
 salirAHablar :: Idioma -> Turista -> Turista
 salirAHablar unIdioma = turistaAcompaniado . sumarIdioma unIdioma
@@ -47,7 +44,7 @@ type Minutos = Int
 
 caminar :: Minutos -> Excursion
 caminar unosMinutos =
-    modificarEstres (- nivelIntesidad unosMinutos) . modificarCansacio (nivelIntesidad unosMinutos )
+    modificarEstres (subtract . nivelIntesidad $ unosMinutos) . modificarCansacio (+ nivelIntesidad unosMinutos )
 
 type Intensidad = Int
 
@@ -58,7 +55,7 @@ data Marea = Fuerte | Moderada | Tranquila deriving Eq
 
 paseoEnBarco :: Marea -> Excursion
 paseoEnBarco unaMarea unTurista 
-    | unaMarea == Fuerte = modificarEstres 6 . modificarCansacio 10 $ unTurista
+    | unaMarea == Fuerte = modificarEstres (+6) . modificarCansacio (+10) $ unTurista
     | unaMarea == Tranquila = salirAHablar "Alemán" . apreciarUn "Mar" . caminar 10 $ unTurista
     | otherwise = unTurista
 
@@ -77,7 +74,7 @@ cathi = sumarIdioma "Catalán" beto
 
 hacerUnaExcursion :: Excursion -> Turista -> Turista
 hacerUnaExcursion unaExcursion unTurista = 
-    modificarEstres (- obtenerPorcentajeDe nivelEstres unTurista) . unaExcursion $ unTurista
+    modificarEstres (subtract . obtenerPorcentajeDe nivelEstres $ unTurista) . unaExcursion $ unTurista
 
 obtenerPorcentajeDe :: Indice -> Turista -> Int
 obtenerPorcentajeDe unAspecto = flip div 100 . unAspecto 
@@ -95,9 +92,9 @@ deltaExcursionSegun unIndice turistaOriginal unaExcursion =
 
 --- C)
 
-esExcursionEduccativa :: Turista -> Excursion -> Bool
-esExcursionEduccativa unTurista unaExcursion =
-    1 <= deltaExcursionSegun (length . idiomas) unTurista unaExcursion
+esExcursionEducativa :: Turista -> Excursion -> Bool
+esExcursionEducativa unTurista unaExcursion =
+    0 /= deltaExcursionSegun (length . idiomas) unTurista unaExcursion
 
 excursionesDesestresantes :: Turista -> [Excursion] -> [Excursion]
 excursionesDesestresantes unTurista  =
@@ -105,7 +102,7 @@ excursionesDesestresantes unTurista  =
 
 esDesestresante :: Turista -> Excursion -> Bool
 esDesestresante unTurista = 
-    (3>=) . deltaExcursionSegun nivelEstres unTurista 
+    (>=3) . abs . deltaExcursionSegun nivelEstres unTurista 
 
 -- PUNTO 3 --
 
@@ -127,7 +124,7 @@ islaVecina unaMarea
 
 hacerUnTour :: Tour -> Turista -> Turista
 hacerUnTour unTour unTurista = 
-    foldr hacerUnaExcursion (modificarEstres (cantidadExcursiones unTour) unTurista) unTour
+    foldr hacerUnaExcursion (modificarEstres (+ cantidadExcursiones unTour) unTurista) unTour
 
 cantidadExcursiones :: Tour -> Int
 cantidadExcursiones = length 
@@ -151,7 +148,7 @@ type Efectividad = Int
 
 efectividadDeUnTour :: Tour -> [Turista] -> Efectividad
 efectividadDeUnTour unTour unosTuristas =
-    sum (map (flip espiritualidadDeUnTurista unTour) unosTuristas)
+    sum (map (`espiritualidadDeUnTurista` unTour) unosTuristas)
 
 type Espiritualidad = Int
 
