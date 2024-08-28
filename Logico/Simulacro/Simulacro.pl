@@ -5,24 +5,29 @@ juego(accion, subwaySurfers, 50000).
 juego(accion, counterStrike, 55600).
 juego(rol, rocket, 30000).
 juego(rol, minecraft, 49000).
-juego(puzzle, sims4, 25500).
+juego(rol, sims4, 25500).
+juego(puzzle, candyCrush, 1000).
 
 % informacion(nombre, caracteristica).
-informacion(sims4, caracteristica( 10, facil)).
-informacion(rocket, caracteristica(20000000)).
+% rol: caracteristica(usuarios activos)
+% puzzle: caracteristica(niveles, dificultad).
+informacion(candyCrush, caracteristica( 10000, facil)).
+informacion(sims4, caracteristica(10000)).
+informacion(rocket, caracteristica(2000000)).
 
-posee(usuario1, minecraft).
-posee(usuario1, subwaySurfers).
-posee(usuario2, sims4).
-posee(usuario2, rocket).
-posee(usuario3, sims4).
+% posee(usuario, juego)
+posee(pepe, minecraft).
+posee(pepe, subwaySurfers).
+posee(carla, sims4).
+posee(carla, rocket).
+posee(marta, sims4).
 
-quiere(usuario1, minecraft, regalar(usuario2)).
-quiere(usuario2, subwaySurfers, simismo).
-quiere(usuario2, counterStrike, regalar(usuario1)).
+quiere(pepe, minecraft, regalar(carla)).
+quiere(carla, subwaySurfers, propio).
+quiere(carla, counterStrike, regalar(pepe)).
 
 % oferta(nombreJuego, descuento)
-oferta(juego1, 30).
+oferta(rocket, 30).
 oferta(sims4, 50).
 oferta(subwaySurfers, 10).
 
@@ -38,7 +43,7 @@ juego(Juego) :-
 precio(Juego, Precio) :-
     oferta(Juego, Descuento),
     juego(_, Juego, PrecioNormal),
-    Porcentaje is Descuento/10,
+    Porcentaje is Descuento / 100,
     aplicarDescuento(Juego, Porcentaje, Precio).
 
 precio(Juego, Precio) :-
@@ -103,12 +108,12 @@ genero(Genero) :-
 
 % buenosAmigos/2
 
-buenosAmigos(Usuario1, Usuario2) :-
-    regaloPopular(Usuario1,Usuario2),
-    regaloPopular(Usuario2, Usuario1).
+buenosAmigos(pepe, carla) :-
+    regaloPopular(pepe,carla),
+    regaloPopular(carla, pepe).
 
-regaloPopular(Usuario1, Usuario2) :-
-    quiere(Usuario1, Juego, regalar(Usuario2)),
+regaloPopular(pepe, carla) :-
+    quiere(pepe, Juego, regalar(carla)),
     popular(Juego).
 
 % gastara/2
