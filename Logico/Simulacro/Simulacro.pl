@@ -33,25 +33,27 @@ oferta(subwaySurfers, 10).
 
 % precio/2
 
-sale(Juego, Precio) :-
-    juego(Juego),
-    precio(Juego, Precio).
+sale(Juego, PrecioFinal) :-
+    juego(_, Juego, PrecioOriginal),
+    obtenerDescuento(Juego, Descuento),
+    calcularPrecio(PrecioOriginal, Descuento, PrecioFinal).
 
 juego(Juego) :-
     juego(_, Juego, _).
-
-precio(Juego, Precio) :-
-    oferta(Juego, Descuento),
-    juego(_, Juego, PrecioNormal),
+    
+obtenerDescuento(Juego, Descuento) :-
+    oferta(Juego, Descuento).
+    
+obtenerDescuento(Juego, 0) :-
+    juego(Juego),
+    not(oferta(Juego, _)).
+  
+calcularPrecio(PrecioOriginal, 0, PrecioOriginal).
+    
+calcularPrecio(PrecioOriginal, Descuento, PrecioFinal) :-
+    Descuento > 0,
     Porcentaje is Descuento / 100,
-    aplicarDescuento(Juego, Porcentaje, Precio).
-
-precio(Juego, Precio) :-
-    juego(_, Juego, Precio).
-
-aplicarDescuento(Juego, Porcentaje, PrecioFinal) :-
-    juego(_ , Juego, Precio),
-    PrecioFinal is Precio * Porcentaje.
+    PrecioFinal is PrecioOriginal * (1 - Porcentaje).
 
 % buenDescuento/1 %
 
@@ -69,8 +71,7 @@ popular(counterStrike).
 
 popularSegun(accion, _).
 
-popularSegun(rol, caracteristica(Juego, Usuarios)) :-
-    juego(Juego),
+popularSegun(rol, caracteristica(Usuarios)) :-
     Usuarios > 1000000.
 
 popularSegun(puzzle, caracteristica(25, _)).
@@ -108,17 +109,19 @@ genero(Genero) :-
 
 % buenosAmigos/2
 
-buenosAmigos(pepe, carla) :-
-    regaloPopular(pepe,carla),
-    regaloPopular(carla, pepe).
+buenosAmigos(Usuario1, Usuario2) :-
+    regaloPopular(Usuario1, Usuario2),
+    regaloPopular(Usuario2, Usuario1).
 
-regaloPopular(pepe, carla) :-
-    quiere(pepe, Juego, regalar(carla)),
+regaloPopular(Usuario1, Usuario2) :-
+    usuario(Usuario1),
+    usuario(Usuario2),
+    quiere(Usuario1, Juego, regalar(Usuario2)),
     popular(Juego).
 
 % gastara/2
 
 gastara(Usuario, Dinero) :-
     usuario(Usuario),
-    findall(Precio, (quiere(Usuario, Juego, _), precio(Juego, Precio)), Precios),
+    findall(Precio, (quiere(Usuario, Juego, _), sale(Juego, Precio)), Precios),
     sum_list(Precios, Dinero).
