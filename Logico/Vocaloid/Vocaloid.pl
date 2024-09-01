@@ -109,7 +109,7 @@ unico(Vocaloid, Concierto) :-
 
 cadenaDeConococidos(Vocaloid, Conocido) :-
     conoce(Vocaloid, OtroVocaloid),
-    conoce(OtroVocaloid, Conocido).
+    cadenaDeConococidos(OtroVocaloid, Conocido).
 
-cadenaDeConococidos(Vocaloid, OtroVocaloid) :-
-    conoce(Vocaloid, OtroVocaloid).
+cadenaDeConococidos(Vocaloid, Conocido) :-
+    conoce(Vocaloid, Conocido).
