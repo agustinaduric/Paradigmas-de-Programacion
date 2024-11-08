@@ -9,19 +9,19 @@ class Argumento {
   method esPregunta() = descripcion.endsWith("?")
 }
 
-class Estoica inherits Argumento {
+object estoica{
   method enrriquece(_argumento) = true
 }
 
-class Moralista inherits Argumento {
+object moralista{
   method enrriquece(argumento) = argumento.cantidadPalabras() >= 10
 }
 
-class Esceptica inherits Argumento {
+object esceptica {
   method enrriquece(argumento) = argumento.esPregunta()
 }
 
-class Cinica inherits Argumento {
+object cinica {
   method enriquece(argumento) = 1.randomUpTo(100) <= 30
 }
 
